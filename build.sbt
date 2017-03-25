@@ -1,4 +1,4 @@
-name := "Dotty Cats"
+name := "Cats with Monocles"
 
 version := "1.0"
 
