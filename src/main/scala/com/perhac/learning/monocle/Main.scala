@@ -1,10 +1,16 @@
 package com.perhac.learning.monocle
 
-import monocle.{Lens, PLens}
+import monocle.{Lens, PLens, Prism}
 
 object Main {
 
   import monocle.macros.GenLens
+
+  sealed trait Json
+  case object JNull extends Json
+  case class JStr(v: String) extends Json
+  case class JNum(v: Double) extends Json
+  case class JObj(v: Map[String, Json]) extends Json
 
   val companyLens = GenLens[Employee](_.company)
   val addressLens = GenLens[Company](_.address)
@@ -55,6 +61,31 @@ object Main {
     //nothing prints, as one of the employees in the list was "fixed" to a None
     //which makes the overall result of the traverse a None
     badStaff.traverse(fixEmployee).fold(println("empty"))(_.foreach(println))
+
+
+
+
+
+
+
+
+    import monocle.std.double.doubleToInt // Prism[Double, Int] defined in Monocle
+
+    val jNum: Prism[Json, Double] = Prism.partial[Json, Double] { case JNum(v) => v }(JNum)
+
+    val jInt: Prism[Json, Int] = jNum composePrism doubleToInt
+    val foo1 = jInt(5)
+    println(foo1)
+
+    val foo2 = jInt.getOption(JNum(5.0))
+    println(foo2)
+
+    val foo3 = jInt.getOption(JNum(5.2))
+    println(foo3)
+
+    val foo4 = jInt.getOption(JStr("Hello"))
+    println(foo4)
+
   }
 
 }
