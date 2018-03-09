@@ -1,10 +1,9 @@
 package com.perhac.learning.monocle
 
+import monocle.macros.Lenses
 import monocle.{Lens, PLens, Prism}
 
 object Main {
-
-  import monocle.macros.GenLens
 
   sealed trait Json
   case object JNull extends Json
@@ -12,13 +11,7 @@ object Main {
   case class JNum(v: Double) extends Json
   case class JObj(v: Map[String, Json]) extends Json
 
-  val companyLens = GenLens[Employee](_.company)
-  val addressLens = GenLens[Company](_.address)
-  val streetLens = GenLens[Address](_.street)
-  val streetNameLens = GenLens[Street](_.name)
-  val streetNumberLens = GenLens[Street](_.number)
-
-  private val focusOnStreet = companyLens composeLens addressLens composeLens streetLens
+  private val focusOnStreet = Employee.company composeLens Company.address composeLens Address.street
 
   private def modifier[A, B, C](lens: PLens[A, A, B, B], subFocus: Lens[B, C], f: C => C) = lens composeLens subFocus modify f
 
@@ -26,8 +19,8 @@ object Main {
   val increment = (_: Int) + 1
 
   val fixName = (e: Employee) => e.copy(name = e.name.capitalize)
-  val fixStreetName = modifier(focusOnStreet, GenLens[Street](_.name), capitalise)
-  val fixStreetNumber = modifier(focusOnStreet, GenLens[Street](_.number), increment)
+  val fixStreetName = modifier(focusOnStreet, Street.name, capitalise)
+  val fixStreetNumber = modifier(focusOnStreet, Street.number, increment)
   val fixEmployee: Employee => Option[Employee] = {
     case Employee(name, _) if "kuko".equalsIgnoreCase(name) => None //we don't like Kuko
     case e => Some(fixStreetName andThen fixStreetNumber andThen fixName apply e)
@@ -90,10 +83,10 @@ object Main {
 
 }
 
-case class Street(number: Int, name: String)
+@Lenses case class Street(number: Int, name: String)
 
-case class Address(city: String, street: Street)
+@Lenses case class Address(city: String, street: Street)
 
-case class Company(name: String, address: Address)
+@Lenses case class Company(name: String, address: Address)
 
-case class Employee(name: String, company: Company)
+@Lenses case class Employee(name: String, company: Company)
