@@ -1,8 +1,8 @@
-package com.perhac.learning.monocle.lensesandprisms
+package com.perhac.learning.monocle
 
-import monocle.Prism
 import monocle.function.Each._
 import monocle.macros.{GenPrism, Lenses}
+import monocle.{Prism, Traversal}
 
 sealed trait Postcode
 
@@ -31,7 +31,7 @@ case class Address(line1: String, line2: Option[String], town: String, postcode:
 @Lenses
 case class Person(name: String, age: Int, addresses: List[Address])
 
-object LensesAndPrisms {
+object Main {
 
   import Address._
   import Person._
@@ -51,9 +51,16 @@ object LensesAndPrisms {
 
   def main(args: Array[String]): Unit = {
 
-    val ukOutwardPostcode = addresses ^|->> each ^|-> postcode ^<-? ukPostcode ^|-> outward
+    val ukPostCodeTraversal = addresses ^|->> each ^|-> postcode ^<-? ukPostcode
+    val ukOutwardPostcode = ukPostCodeTraversal ^|-> outward
     val skPostCode = addresses ^|->> each ^|-> postcode ^<-? slovakPostcode ^|-> number
 
+    val bothPartsOfUkPostCode = Traversal.apply2[UkPostcode, String](_.outward, _.inward)((o, i, pc) => pc.copy(o, i))
+    val reverseBothPartsOfUkPostcode = (ukPostCodeTraversal ^|->> bothPartsOfUkPostCode).modify(_.reverse)
+
+    println(reverseBothPartsOfUkPostcode(puk))
+    println(reverseBothPartsOfUkPostcode(psk))
+    
     println(ukOutwardPostcode.getAll(puk))
     println(ukOutwardPostcode.modify(_.reverse)(puk))
     println(ukOutwardPostcode.getAll(psk))
