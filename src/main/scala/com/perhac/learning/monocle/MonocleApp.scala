@@ -51,16 +51,18 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    val ukPostCodeTraversal = addresses ^|->> each ^|-> postcode ^<-? ukPostcode
+    val postcodes = addresses ^|->> each ^|-> postcode
+
+    val ukPostCodeTraversal = postcodes ^<-? ukPostcode
     val ukOutwardPostcode = ukPostCodeTraversal ^|-> outward
-    val skPostCode = addresses ^|->> each ^|-> postcode ^<-? slovakPostcode ^|-> number
+    val skPostCode = postcodes ^<-? slovakPostcode ^|-> number
 
     val bothPartsOfUkPostCode = Traversal.apply2[UkPostcode, String](_.outward, _.inward)((o, i, pc) => pc.copy(o, i))
     val reverseBothPartsOfUkPostcode = (ukPostCodeTraversal ^|->> bothPartsOfUkPostCode).modify(_.reverse)
 
     println(reverseBothPartsOfUkPostcode(puk))
     println(reverseBothPartsOfUkPostcode(psk))
-    
+
     println(ukOutwardPostcode.getAll(puk))
     println(ukOutwardPostcode.modify(_.reverse)(puk))
     println(ukOutwardPostcode.getAll(psk))
